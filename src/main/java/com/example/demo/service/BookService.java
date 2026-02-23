@@ -2,85 +2,65 @@ package com.example.demo.service;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.demo.Entity.Book;
+import com.example.demo.dto.BookRequestDto;
+import com.example.demo.dto.BookResponseDto;
+import com.example.demo.exception.BookAccessDeniedException;
+import com.example.demo.exception.BookNotFoundException;
+import com.example.demo.mapper.BookMapper;
 import com.example.demo.repo.Bookrepo;
-
-/**
- * Service Layer for Book Operations
- * 
- * This class contains business logic related to Book entity.
- * It interacts with Bookrepo (Repository layer).
- */
 
 @Service
 public class BookService {
 
-    // Injecting Book Repository
-    @Autowired
-    private Bookrepo br;
+    private final Bookrepo bookRepository;
+    private final BookMapper bookMapper;
 
-    /**
-     * Fetch all books from database
-     * @return List<Book>
-     */
-    public List<Book> getAllBooks() {
-        return (List<Book>) br.findAll();
+    public BookService(Bookrepo bookRepository, BookMapper bookMapper) {
+        this.bookRepository = bookRepository;
+        this.bookMapper = bookMapper;
     }
 
-    /**
-     * Fetch single book by ID
-     * @param bid - Book ID
-     * @return Book object
-     */
-    public Book getBookById(Long bid) {
-        return br.findById(bid)
-                .orElseThrow(() -> new RuntimeException("Book not found with id: " + bid));
+    public List<BookResponseDto> getAllBooks() {
+        return bookRepository.findAll()
+                .stream()
+                .map(bookMapper::toResponseDto)
+                .toList();
     }
 
-    /**
-     * Add new book to database
-     * @param book - Book object
-     * @return success message
-     */
-    public String addBook(Book book) {
-        br.save(book);
-        return "Book added successfully";
-    }
+    public BookResponseDto getBookById(Long bookId, String loggedInUser) {
+        Book book = findBookOrThrow(bookId);
 
-    /**
-     * Update existing book
-     * @param bid - Book ID
-     * @param book - Updated book data
-     * @return success message
-     */
-    public String updateBook(Long bid, Book book) {
-
-        Book bookDb = br.findById(bid)
-                .orElseThrow(() -> new RuntimeException("Book not found with id: " + bid));
-
-        if (book.getName() != null) {
-            bookDb.setName(book.getName());
+        if (!book.getAuthor().equalsIgnoreCase(loggedInUser)) {
+            throw new BookAccessDeniedException(bookId, loggedInUser);
         }
 
-        if (book.getAuthor() != null) {
-            bookDb.setAuthor(book.getAuthor());
-        }
-
-        br.save(bookDb);
-
-        return "Book updated successfully";
+        return bookMapper.toResponseDto(book);
     }
 
-    /**
-     * Delete book by ID
-     * @param bid - Book ID
-     * @return success message
-     */
-    public String deleteBook(Long bid) {
-        br.deleteById(bid);
-        return "Book deleted successfully";
+    public BookResponseDto addBook(BookRequestDto requestDto) {
+        Book book = bookMapper.toEntity(requestDto);
+        Book savedBook = bookRepository.save(book);
+        return bookMapper.toResponseDto(savedBook);
+    }
+
+    public BookResponseDto updateBook(Long bookId, BookRequestDto requestDto) {
+        Book existingBook = findBookOrThrow(bookId);
+        existingBook.setName(requestDto.getName());
+        existingBook.setAuthor(requestDto.getAuthor());
+        Book savedBook = bookRepository.save(existingBook);
+        return bookMapper.toResponseDto(savedBook);
+    }
+
+    public void deleteBook(Long bookId) {
+        Book existingBook = findBookOrThrow(bookId);
+        bookRepository.delete(existingBook);
+    }
+
+    private Book findBookOrThrow(Long bookId) {
+        return bookRepository.findById(bookId)
+                .orElseThrow(() -> new BookNotFoundException(bookId));
     }
 }

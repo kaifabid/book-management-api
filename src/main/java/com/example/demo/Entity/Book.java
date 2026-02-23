@@ -1,53 +1,56 @@
 package com.example.demo.Entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "book_demo")   
+@Table(name = "book_demo")
 public class Book {
-	
-	@Id
-	private Long id;
 
-	
-	private String name;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	private String author;   
-	
-	public Book() {}
+    @Column(nullable = false, length = 150)
+    private String name;
 
-	public Book(Long id, String name, String author) {
-		this.id = id;
-		this.name = name;
-		this.author = author;   
-	}
+    @Column(nullable = false, length = 100)
+    private String author;
 
-	public Long getId() {
-		return id;
-	}
+    public Book() {
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    public Book(Long id, String name, String author) {
+        this.id = id;
+        this.name = name;
+        this.author = author;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public Long getId() {
+        return id;
+    }
 
-	public void setName(String name) {
-		this.name = name;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public String getAuthor() {
-		return author;   
-	}
+    public String getName() {
+        return name;
+    }
 
-	public void setAuthor(String author) {
-		this.author = author;   
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	@Override
-	public String toString() {
-		return "Book [id=" + id + ", name=" + name + ", author=" + author + "]";
-	}
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
 }
