@@ -7,11 +7,15 @@ import jakarta.persistence.*;
 public class Book {
 	
 	@Id
+	//@NotNull(message="Book id cannot be null")
+	//@Min(value = 1 , message="Id must be greater than 0")
 	private Long id;
 
 	
+	//@NotBlank(message="Book name cannot be empty")
 	private String name;
 
+	//@NotBlank(message="Author cannot be empty")
 	private String author;   
 	
 	public Book() {}
